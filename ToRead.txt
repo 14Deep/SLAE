@@ -1,0 +1,3 @@
+http://www.hick.org/code/skape/papers/egghunt-shellcode.pdf
+http://www.fuzzysecurity.com/tutorials/expDev/4.html
+https://manybutfinite.com/post/anatomy-of-a-program-in-memory/
