@@ -16,27 +16,27 @@ init:
 	dec edx      ; dec edx to = the key
 
 addr_inc:
-	inc ebx      ;ebx will contain the memory location to be checked
-	pusha
+	inc ebx      ; ebx will contain the memory location to be checked
+	pusha        ; Push all general purpose registers to the stackto maintain state after syscall
 
 syscall:
-	mov al, 0x21
-	int 0x80
+	mov al, 0x21 ; access(2) syscall value
+	int 0x80     ; Interupt for syscall
 
 cmp1:
-	cmp al, 0xf2
-	popa
-	jz short addr_inc
+	cmp al, 0xf2 ; Compare return value with 0xf2 - lowest byte of efault value 
+	popa         ; pop registers back from before syscall
+	jz short addr_inc ; If the zero flag is set, jump to addr_inc
 
 cmp2:
-	cmp [edx], ebx
-	jnz short addr_inc
+	cmp [ebx], edx ; Compare the contents of ebx with edx, the key
+	jnz short addr_inc ; If the values do not match a jump is taken to addr_inc
 
-	cmp [edx+0x4], ebx
-	jnz short addr_inc
+	cmp [ebx+0x4], edx ; Compare the contents of ebx+0x4 to edx, the key
+	jnz short addr_inc ; If the values do not match a jump is taken to addr_inc
 
 confirmed:
-	jmp edx
+	jmp ebx      ; unconditional jump to ebx, the confirmed location to continue execution
 
 
 
