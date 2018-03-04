@@ -1,3 +1,6 @@
 # SLAE
 
-This will contain code from the SLAE course by SecurityTube. Further ASM programs created as part of learning will also be included heavily commented for future reference.  
+
+This repo contains code written for the SecurityTube Linux Assembly Expert (SLAE) course. All created programs for this course are heavily commented with full write ups found within my blog. 
+
+
