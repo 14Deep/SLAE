@@ -11,11 +11,13 @@ global _start
 section .text
 _start:
 
-search:
 
-	mov ebx, 0x50905090
-	xor ecx, ecx
-	mul ecx
+
+mov ebx, 0x50905090
+xor ecx, ecx
+mul ecx
+	
+search:
 	or dx, 0xfff
 	inc edx
 	pusha
