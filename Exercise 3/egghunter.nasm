@@ -22,12 +22,12 @@ dec ebx 			; dec edx to = the key
 
 
 addr_page:
-	or dx, 0xfff 		; edx is used as a pointer used to iterate through blocks of memory
+or dx, 0xfff 			; edx is used as a pointer used to iterate through blocks of memory
 				; See write up for a breakdown
 
 incr:
-	inc edx			; increment edx to push it from 0xfff to 0x1000 - it will add 0x1000 each call
-	pusha        		; Push all general purpose registers to the stackto maintain state after syscall
+inc edx				; increment edx to push it from 0xfff to 0x1000 - it will add 0x1000 each call
+pusha        			; Push all general purpose registers to the stackto maintain state after syscall
 
 lea ebx, [edx+0x4]		; loading the address of edx+0x4 to ebx for the addr parameter
 mov al, 0x21 			; access(2) syscall value
